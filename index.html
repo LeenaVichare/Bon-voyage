@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Tourist Safety</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    /* Map specific styles */
+    #map {
+      height: 400px;
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .location-section {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .location-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .location-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .location-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .location-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .coordinate-inputs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .coord-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .coord-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .location-btn {
+      padding: 10px 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .location-btn:hover {
+      background: #5a67d8;
+      transform: translateY(-1px);
+    }
+    
+    .map-view-controls {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    
+    .map-view-btn {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .map-view-btn:hover {
+      background: white;
+      transform: translateY(-1px);
+    }
+    
+    .map-view-btn.active {
+      background: #10b981;
+      color: white;
+    }
+    
+    .popular-destinations {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    
+    .destination-btn {
+      padding: 6px 10px;
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border: none;
+      border-radius: 12px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #374151;
+    }
+    
+    .destination-btn:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transform: translateY(-1px);
+    }
+    
+    .map-controls {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .map-control-btn {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .map-control-btn:hover {
+      background: white;
+      transform: translateY(-1px);
+    }
+    
+    .map-control-btn.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .user-greeting {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.8);
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #ef4444;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .logout-btn:hover {
+      background: #ef4444;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-left">
+        <span class="time">9:41</span>
+      </div>
+      <div class="status-right">
+        <i class="fas fa-signal"></i>
+        <i class="fas fa-wifi"></i>
+        <i class="fas fa-battery-three-quarters"></i>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Dashboard Screen -->
+      <div class="screen active" id="dashboardScreen">
+        <header class="header">
+          <div class="user-info">
+            <img id="userAvatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face" alt="Tourist" class="avatar" />
+            <div class="user-greeting">
+              <div>
+                <div class="greeting" id="userGreeting">Welcome, Sandra</div>
+                <div class="date" id="userLocation">Shillong, Meghalaya • 25 Nov</div>
+              </div>
+              <button class="logout-btn" onclick="logout()" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+              </button>
+            </div>
+          </div>
+          <button class="search-btn" title="Notifications" onclick="openAlerts()">
+            <i class="fas fa-bell"></i>
+          </button>
+        </header>
+
+        <!-- Safety Score / Panic -->
+        <div class="challenge-card" style="background: linear-gradient(135deg,#0ea5e9 0%,#60a5fa 100%);">
+          <div class="challenge-content">
+            <h2>Tourist Safety Score</h2>
+            <p id="safetySummary">AI monitoring active • Low risk</p>
+            <div class="avatars">
+              <span class="more" title="Police units on duty">
+                <i class="fas fa-shield-alt"></i>
+              </span>
+              <span class="more" title="Family tracking enabled">
+                <i class="fas fa-user-friends"></i>
+              </span>
+              <span class="more" title="Geo-fencing on">
+                <i class="fas fa-map-marker-alt"></i>
+              </span>
+            </div>
+          </div>
+          <div class="challenge-icon" style="opacity:.5">
+            <i class="fas fa-shield-heart"></i>
+          </div>
+        </div>
+
+        <!-- Trip Itinerary / Calendar like UI -->
+        <div class="calendar" id="itineraryBar">
+          <!-- Populated via JS with today's plan steps -->
+        </div>
+
+        <!-- Your Plan Section -->
+        <section class="plan-section">
+          <h3>Your trip plan</h3>
+          <div class="plan-grid">
+            <div class="plan-card yoga" style="background: linear-gradient(135deg,#22c55e 0%,#16a34a 100%)">
+              <div class="plan-header">
+                <span class="difficulty">Safe</span>
+              </div>
+              <h4>Ward's Lake • Morning Walk</h4>
+              <div class="plan-details">
+                <div>25 Nov</div>
+                <div>08:00 - 09:30</div>
+                <div>Risk: Low • Crowd: Medium</div>
+              </div>
+              <div class="instructor">
+                <img src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=30&h=30&fit=crop" alt="Guide" />
+                <span>Guide<br>Anthony</span>
+              </div>
+            </div>
+
+            <div class="plan-card balance">
+              <div class="plan-header">
+                <span class="difficulty light">Caution</span>
+              </div>
+              <h4>Elephant Falls</h4>
+              <div class="plan-details">
+                <div>25 Nov</div>
+                <div>12:00 - 14:00</div>
+                <div>Risk: Medium • Slippery paths</div>
+              </div>
+              <div class="balance-icon">
+                <i class="fas fa-water"></i>
+              </div>
+            </div>
+
+            <div class="plan-card meditation" style="background: linear-gradient(135deg,#ef4444 0%,#f97316 100%);">
+              <div class="meditation-buttons">
+                <button class="meditation-btn active" id="panicBtn" title="Panic / SOS">
+                  <i class="fas fa-siren-on"></i>
+                </button>
+                <button class="meditation-btn" id="shareLiveBtn" title="Share live location">
+                  <i class="fas fa-location-arrow"></i>
+                </button>
+                <button class="meditation-btn" id="callPoliceBtn" title="Call Police">
+                  <i class="fas fa-phone"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Map Screen -->
+      <div class="screen" id="mapScreen">
+        <header class="profile-header">
+          <button class="back-btn" onclick="switchScreen('dashboard')"><i class="fas fa-chevron-left"></i></button>
+          <h2>Live Map & Geo-fencing</h2>
+          <button class="settings-btn" onclick="toggleTracking()"><i class="fas fa-satellite-dish"></i></button>
+        </header>
+        <div class="map-content">
+          <!-- Location Setting Section -->
+          <div class="location-section">
+            <h3 style="font-size:16px;margin-bottom:12px;color:#1a1a1a;">📍 Set Your Location</h3>
+            <div class="location-inputs">
+              <div class="location-input-group">
+                <input type="text" id="locationSearch" placeholder="Search city or address..." class="location-input">
+                <button onclick="searchLocation()" class="location-btn">
+                  <i class="fas fa-search"></i>
+                </button>
+                <button onclick="getCurrentLocation()" class="location-btn" title="Use GPS">
+                  <i class="fas fa-location-arrow"></i>
+                </button>
+              </div>
+              <div class="coordinate-inputs">
+                <input type="number" id="latInput" placeholder="Latitude" class="coord-input" step="any">
+                <input type="number" id="lngInput" placeholder="Longitude" class="coord-input" step="any">
+                <button onclick="setManualLocation()" class="location-btn">
+                  <i class="fas fa-map-pin"></i> Set
+                </button>
+              </div>
+              
+              <!-- Popular Destinations -->
+              <div style="margin-top:16px;">
+                <h4 style="font-size:14px;color:#6b7280;margin-bottom:8px;">Popular Destinations</h4>
+                <div class="popular-destinations">
+                  <button onclick="setPopularLocation(40.7128, -74.0060, 'New York City, USA')" class="destination-btn">
+                    🗽 NYC
+                  </button>
+                  <button onclick="setPopularLocation(51.5074, -0.1278, 'London, UK')" class="destination-btn">
+                    🇬🇧 London
+                  </button>
+                  <button onclick="setPopularLocation(48.8566, 2.3522, 'Paris, France')" class="destination-btn">
+                    🇫🇷 Paris
+                  </button>
+                  <button onclick="setPopularLocation(35.6762, 139.6503, 'Tokyo, Japan')" class="destination-btn">
+                    🇯🇵 Tokyo
+                  </button>
+                  <button onclick="setPopularLocation(28.6139, 77.2090, 'New Delhi, India')" class="destination-btn">
+                    🇮🇳 Delhi
+                  </button>
+                  <button onclick="setPopularLocation(19.0760, 72.8777, 'Mumbai, India')" class="destination-btn">
+                    🏙️ Mumbai
+                  </button>
+                  <button onclick="setPopularLocation(25.5788, 91.8933, 'Shillong, India')" class="destination-btn">
+                    🏔️ Shillong
+                  </button>
+                  <button onclick="setPopularLocation(-33.8688, 151.2093, 'Sydney, Australia')" class="destination-btn">
+                    🇦🇺 Sydney
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Map View Controls -->
+          <div class="map-view-controls">
+            <button class="map-view-btn active" onclick="switchMapView('local')">
+              <i class="fas fa-map"></i> Local View
+            </button>
+            <button class="map-view-btn" onclick="switchMapView('world')">
+              <i class="fas fa-globe"></i> World View
+            </button>
+          </div>
+
+          <!-- Map Controls -->
+          <div class="map-controls">
+            <button class="map-control-btn active" onclick="toggleLayer('tourist')">
+              <i class="fas fa-user-friends"></i> Tourists
+            </button>
+            <button class="map-control-btn" onclick="toggleLayer('police')">
+              <i class="fas fa-shield-alt"></i> Police
+            </button>
+            <button class="map-control-btn" onclick="toggleLayer('geofence')">
+              <i class="fas fa-draw-polygon"></i> Geo-fences
+            </button>
+            <button class="map-control-btn" onclick="toggleLayer('incidents')">
+              <i class="fas fa-exclamation-triangle"></i> Incidents
+            </button>
+            <button class="map-control-btn" onclick="centerOnUser()">
+              <i class="fas fa-crosshairs"></i> My Location
+            </button>
+          </div>
+          
+          <!-- Interactive Map -->
+          <div id="map"></div>
+          
+          <!-- Map Status -->
+          <div style="margin-top:16px; text-align:center;">
+            <p id="geoStatus" style="color:#111827;font-weight:600;font-size:14px;">Geo-fencing: enabled • Real-time tracking active</p>
+            <p style="color:#6b7280;font-size:12px;margin-top:4px;">Last updated: <span id="mapLastUpdate">just now</span></p>
+          </div>
+          
+          <!-- Loading Spinner -->
+          <div class="loading-spinner" id="mapLoading">
+            <i class="fas fa-spinner fa-spin fa-2x" style="color:#667eea;"></i>
+            <p style="margin-top:12px;color:#6b7280;">Loading map data...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts Screen -->
+      <div class="screen" id="alertsScreen">
+        <header class="profile-header">
+          <button class="back-btn" onclick="switchScreen('dashboard')"><i class="fas fa-chevron-left"></i></button>
+          <h2>Alerts & Activity</h2>
+          <button class="settings-btn" onclick="clearAlerts()"><i class="fas fa-broom"></i></button>
+        </header>
+        <div class="menu-items" id="alertsList">
+          <!-- Alerts populated here -->
+        </div>
+      </div>
+
+      <!-- Profile / Digital ID Screen -->
+      <div class="screen" id="profileScreen">
+        <header class="profile-header">
+          <button class="back-btn" onclick="switchScreen('dashboard')"><i class="fas fa-chevron-left"></i></button>
+          <h2>Digital Tourist ID</h2>
+          <button class="settings-btn"><i class="fas fa-qrcode"></i></button>
+        </header>
+
+        <div class="profile-content">
+          <div class="profile-info">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face" alt="Sandra Glam" class="profile-avatar" />
+            <h3>Sandra Glam</h3>
+            <p class="location">Passport X123••• • Valid till: 02 Dec</p>
+
+            <div class="follow-stats">
+              <div class="stat">
+                <span class="number">Safety score</span>
+                <span class="label" id="safetyScore">82</span>
+              </div>
+              <div class="stat">
+                <span class="number">Active alerts</span>
+                <span class="label" id="activeAlerts">0</span>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn-secondary" title="Share ID">
+                <i class="fas fa-share"></i>
+              </button>
+              <button class="btn-secondary" title="Download ID">
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card weight">
+              <div class="stat-label">Last known location</div>
+              <div class="stat-value" id="lastLocation">Police Bazaar</div>
+            </div>
+            <div class="stat-card goal">
+              <div class="stat-label">Guardian contacts</div>
+              <div class="stat-value">3 saved</div>
+            </div>
+            <div class="stat-card calories">
+              <div class="stat-label">E-FIR status</div>
+              <div class="stat-value" id="efirStatus">None</div>
+            </div>
+          </div>
+
+          <div class="menu-items">
+            <div class="menu-item">
+              <div class="menu-icon"><i class="fas fa-route"></i></div>
+              <div class="menu-content">
+                <div class="menu-title">Trip Itinerary</div>
+                <div class="menu-subtitle">View & edit planned routes</div>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="menu-item">
+              <div class="menu-icon"><i class="fas fa-lock"></i></div>
+              <div class="menu-content">
+                <div class="menu-title">Privacy & Consent</div>
+                <div class="menu-subtitle">Tracking is opt-in and encrypted</div>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="menu-item">
+              <div class="menu-icon"><i class="fas fa-language"></i></div>
+              <div class="menu-content">
+                <div class="menu-title">Language</div>
+                <div class="menu-subtitle">English • हिंदी • বাংলা • অসমীয়া</div>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-target="dashboard" onclick="switchScreen('dashboard')"><i class="fas fa-home"></i></button>
+      <button class="nav-item" data-target="map" onclick="switchScreen('map')"><i class="fas fa-map"></i></button>
+      <button class="nav-item" data-target="alerts" onclick="switchScreen('alerts')"><i class="fas fa-bell"></i></button>
+      <button class="nav-item" data-target="profile" onclick="switchScreen('profile')"><i class="fas fa-id-card"></i></button>
+    </nav>
+  </div>
+
+  <!-- Leaflet Map JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuthentication();
+      loadUserData();
+    });
+    
+    function checkAuthentication() {
+      const session = localStorage.getItem('touristSafetySession');
+      if (!session) {
+        // No session, redirect to auth
+        window.location.href = 'auth.html';
+        return;
+      }
+      
+      try {
+        const sessionData = JSON.parse(session);
+        const now = Date.now();
+        
+        if (now - sessionData.loginTime >= sessionData.expiresIn) {
+          // Session expired
+          localStorage.removeItem('touristSafetySession');
+          localStorage.removeItem('currentUser');
+          window.location.href = 'auth.html';
+          return;
+        }
+      } catch (error) {
+        // Invalid session data
+        localStorage.removeItem('touristSafetySession');
+        localStorage.removeItem('currentUser');
+        window.location.href = 'auth.html';
+        return;
+      }
+    }
+    
+    function loadUserData() {
+      const userData = localStorage.getItem('currentUser');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          updateUIWithUserData(user);
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      }
+    }
+    
+    function updateUIWithUserData(user) {
+      // Update greeting
+      const greeting = document.getElementById('userGreeting');
+      if (greeting) {
+        greeting.textContent = `Welcome, ${user.name}`;
+      }
+      
+      // Update location
+      const location = document.getElementById('userLocation');
+      if (location) {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        location.textContent = `${user.location} • ${dateStr}`;
+      }
+      
+      // Update safety score
+      const scoreElement = document.getElementById('safetyScore');
+      if (scoreElement && user.safetyScore) {
+        scoreElement.textContent = user.safetyScore;
+      }
+      
+      // Update digital ID info
+      const digitalIdElements = document.querySelectorAll('.profile-content h3');
+      if (digitalIdElements.length > 0) {
+        digitalIdElements[0].textContent = user.name;
+      }
+      
+      // Update tourist ID display
+      const locationElements = document.querySelectorAll('.location');
+      if (locationElements.length > 0) {
+        const idDisplay = user.digitalId ? `${user.digitalId.slice(0, 8)}••• • Valid till: ` : 'Tourist ID • Valid till: ';
+        const validTill = new Date();
+        validTill.setDate(validTill.getDate() + 7);
+        locationElements[0].textContent = idDisplay + validTill.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      }
+    }
+    
+    function logout() {
+      localStorage.removeItem('touristSafetySession');
+      localStorage.removeItem('currentUser');
+      window.location.href = 'auth.html';
+    }
+    
+    // Export logout function
+    window.logout = logout;
+  </script>
+</body>
+</html>
+

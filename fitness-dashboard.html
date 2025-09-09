@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Mobile Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span class="time">9:41</span>
+            </div>
+            <div class="status-right">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-three-quarters"></i>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Home Screen -->
+            <div class="screen active" id="homeScreen">
+                <!-- Header -->
+                <header class="header">
+                    <div class="user-info">
+                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face" alt="Sandra" class="avatar">
+                        <div>
+                            <div class="greeting">Hello, Sandra</div>
+                            <div class="date">Today 25 Nov</div>
+                        </div>
+                    </div>
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </header>
+
+                <!-- Daily Challenge Card -->
+                <div class="challenge-card">
+                    <div class="challenge-content">
+                        <h2>Daily challenge</h2>
+                        <p>Do you plan before 09:00 PM?</p>
+                        <div class="avatars">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face" alt="User 1">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=40&h=40&fit=crop&crop=face" alt="User 2">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="User 3">
+                            <span class="more">+</span>
+                        </div>
+                    </div>
+                    <div class="challenge-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                </div>
+
+                <!-- Calendar -->
+                <div class="calendar">
+                    <div class="calendar-day">
+                        <span class="day-name">Sun</span>
+                        <span class="day-number">22</span>
+                    </div>
+                    <div class="calendar-day">
+                        <span class="day-name">Mon</span>
+                        <span class="day-number">23</span>
+                    </div>
+                    <div class="calendar-day">
+                        <span class="day-name">Tue</span>
+                        <span class="day-number">24</span>
+                    </div>
+                    <div class="calendar-day active">
+                        <span class="day-name">Wed</span>
+                        <span class="day-number">25</span>
+                    </div>
+                    <div class="calendar-day">
+                        <span class="day-name">Thu</span>
+                        <span class="day-number">26</span>
+                    </div>
+                    <div class="calendar-day">
+                        <span class="day-name">Fri</span>
+                        <span class="day-number">27</span>
+                    </div>
+                    <div class="calendar-day">
+                        <span class="day-name">Sat</span>
+                        <span class="day-number">28</span>
+                    </div>
+                </div>
+
+                <!-- Your Plan Section -->
+                <section class="plan-section">
+                    <h3>Your plan</h3>
+                    <div class="plan-grid">
+                        <div class="plan-card yoga">
+                            <div class="plan-header">
+                                <span class="difficulty">Medium</span>
+                            </div>
+                            <h4>Yoga Group</h4>
+                            <div class="plan-details">
+                                <div>25 Nov</div>
+                                <div>16:00-15:00</div>
+                                <div>A5 room</div>
+                            </div>
+                            <div class="instructor">
+                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=30&h=30&fit=crop&crop=face" alt="Instructor">
+                                <span>Tutor<br>Tiffany Way</span>
+                            </div>
+                        </div>
+
+                        <div class="plan-card balance">
+                            <div class="plan-header">
+                                <span class="difficulty light">Light</span>
+                            </div>
+                            <h4>Balance</h4>
+                            <div class="plan-details">
+                                <div>28 Nov</div>
+                                <div>16:00-15:30</div>
+                                <div>A2 room</div>
+                            </div>
+                            <div class="balance-icon">
+                                <i class="fas fa-yin-yang"></i>
+                            </div>
+                        </div>
+
+                        <div class="plan-card meditation">
+                            <div class="meditation-buttons">
+                                <button class="meditation-btn active">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="meditation-btn">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                                <button class="meditation-btn">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Profile Screen -->
+            <div class="screen" id="profileScreen">
+                <header class="profile-header">
+                    <button class="back-btn" onclick="switchScreen('home')">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2>Profile</h2>
+                    <button class="settings-btn">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </header>
+
+                <div class="profile-content">
+                    <!-- User Profile Info -->
+                    <div class="profile-info">
+                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face" alt="Sandra Glam" class="profile-avatar">
+                        <h3>Sandra Glam</h3>
+                        <p class="location">Denmark, Copenhagen</p>
+                        
+                        <div class="follow-stats">
+                            <div class="stat">
+                                <span class="number">Following</span>
+                                <span class="label">72</span>
+                            </div>
+                            <div class="stat">
+                                <span class="number">Followers</span>
+                                <span class="label">162</span>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn-secondary">
+                                <i class="fas fa-share"></i>
+                            </button>
+                            <button class="btn-secondary">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card weight">
+                            <div class="stat-label">Start weight</div>
+                            <div class="stat-value">53.3 kg</div>
+                        </div>
+                        <div class="stat-card goal">
+                            <div class="stat-label">Goal</div>
+                            <div class="stat-value">50.0 kg</div>
+                        </div>
+                        <div class="stat-card calories">
+                            <div class="stat-label">Daily calories</div>
+                            <div class="stat-value">740 kcal</div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Items -->
+                    <div class="menu-items">
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="menu-content">
+                                <div class="menu-title">Physical activity</div>
+                                <div class="menu-subtitle">5 days ago</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="menu-content">
+                                <div class="menu-title">Statistics</div>
+                                <div class="menu-subtitle">This year: 106 kilometers</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <i class="fas fa-route"></i>
+                            </div>
+                            <div class="menu-content">
+                                <div class="menu-title">Routes</div>
+                                <div class="menu-subtitle">Show all</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <i class="fas fa-stopwatch"></i>
+                            </div>
+                            <div class="menu-content">
+                                <div class="menu-title">Best time</div>
+                                <div class="menu-subtitle">Show all</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <i class="fas fa-dumbbell"></i>
+                            </div>
+                            <div class="menu-content">
+                                <div class="menu-title">Equipment</div>
+                                <div class="menu-subtitle">Nike Pegasus 39/40, 90.4 km</div>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchScreen('home')">
+                <i class="fas fa-home"></i>
+            </button>
+            <button class="nav-item" onclick="switchScreen('apps')">
+                <i class="fas fa-th"></i>
+            </button>
+            <button class="nav-item" onclick="switchScreen('bookmark')">
+                <i class="fas fa-bookmark"></i>
+            </button>
+            <button class="nav-item" onclick="switchScreen('profile')">
+                <i class="fas fa-user"></i>
+            </button>
+        </nav>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

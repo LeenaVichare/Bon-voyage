@@ -1,0 +1,215 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: tourist-safety-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tourist_safety_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - tourist-safety-network
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: tourist-safety-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: tourist_safety_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - tourist-safety-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: tourist-safety-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass password123
+    networks:
+      - tourist-safety-network
+
+  # Ethereum/Blockchain Node (Ganache)
+  ganache:
+    image: trufflesuite/ganache:latest
+    container_name: tourist-safety-blockchain
+    restart: unless-stopped
+    ports:
+      - "8545:8545"
+    command: >
+      --server.host 0.0.0.0
+      --server.port 8545
+      --database.dbPath /ganache_data
+      --accounts 10
+      --deterministic
+      --mnemonic "tourist safety blockchain development mnemonic seed phrase here for testing"
+    volumes:
+      - ganache_data:/ganache_data
+    networks:
+      - tourist-safety-network
+
+  # IPFS Node
+  ipfs:
+    image: ipfs/go-ipfs:latest
+    container_name: tourist-safety-ipfs
+    restart: unless-stopped
+    ports:
+      - "4001:4001"     # P2P
+      - "5001:5001"     # API
+      - "8080:8080"     # Gateway
+    volumes:
+      - ipfs_data:/data/ipfs
+    networks:
+      - tourist-safety-network
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: tourist-safety-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password123
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - tourist-safety-network
+
+  # Prometheus (Monitoring)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tourist-safety-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - tourist-safety-network
+
+  # Grafana (Visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tourist-safety-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: password123
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - tourist-safety-network
+
+  # Main Application (Development)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: tourist-safety-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:password123@postgres:5432/tourist_safety_db
+      MONGODB_URL: mongodb://admin:password123@mongodb:27017/tourist_safety_mongo?authSource=admin
+      REDIS_URL: redis://:password123@redis:6379
+      ETHEREUM_RPC_URL: http://ganache:8545
+      IPFS_API_URL: http://ipfs:5001
+    ports:
+      - "3000:3000"
+      - "3002:3002"   # WebSocket port
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+      - ganache
+      - ipfs
+      - rabbitmq
+    networks:
+      - tourist-safety-network
+    command: npm run dev
+
+  # AI/ML Service (Python-based)
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: tourist-safety-ml
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: development
+      DATABASE_URL: postgresql://postgres:password123@postgres:5432/tourist_safety_db
+      REDIS_URL: redis://:password123@redis:6379
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ml-service:/app
+      - ./data/models:/app/models
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - tourist-safety-network
+
+volumes:
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  ganache_data:
+    driver: local
+  ipfs_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  tourist-safety-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
